@@ -7,6 +7,8 @@ var gulp = require("gulp"),
 	cleanCss = require('gulp-clean-css'),
 	gulpif = require('gulp-if'),
 	uglify = require('gulp-uglify'),
+	minifyHtml = require('gulp-minify-html'),
+	jsonMinify = require('gulp-jsonminify'),
 	browserify = require('gulp-browserify');
 
 var env,
@@ -38,7 +40,7 @@ jsSrcs = [
 	'components/scripts/template.js'	
 ];
 sassSrcs = ['components/sass/style.scss'];
-htmlSrcs = ['builds/development/index.html'];
+htmlSrcs = ['builds/development/*.html'];
 jsonSrcs = ['builds/development/js/*.json'];
 
 gulp.task('coffee', function() {
@@ -61,8 +63,7 @@ gulp.task('compass', function() {
 	gulp.src(sassSrcs)
 		.pipe(compass({
 			sass: 'components/sass',
-			image: 'builds/development/images',
-			config_file: 'compass_config.rb'
+			image: 'builds/development/images'
 		})
 		.on('error', gutil.log))
 		.pipe(cleanCss())
@@ -81,18 +82,22 @@ gulp.task('watch', function() {
 
 gulp.task('connect', function() {
 	connect.server({
-		root: 'builds/development/',
+		root: outputDir,
 		livereload: true
 	});
 });
 
 gulp.task('html', function() {
 	gulp.src(htmlSrcs)
+		.pipe(gulpif(env === 'production', minifyHtml()))
+		.pipe(gulpif(env === 'production', gulp.dest(outputDir) ))
 		.pipe(connect.reload());
 });
 
 gulp.task('json', function() {
 	gulp.src(jsonSrcs)
+		.pipe(gulpif(env === 'production', jsonMinify()))
+		.pipe(gulpif(env === 'production', gulp.dest(outputDir+'js') ))
 		.pipe(connect.reload());
 });
 
